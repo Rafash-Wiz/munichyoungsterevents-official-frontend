@@ -67,7 +67,7 @@ export default function CreateEventPopup({
 
       await apiRequest(path, {
         method,
-        body: JSON.stringify(event),
+        data: event,
       });
 
       onEventCreated?.();

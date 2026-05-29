@@ -65,7 +65,7 @@ export default function AuthPopup({
 
       await apiRequest("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify(payload),
+        data: payload,
       });
 
       setShowRegisteredPopup(true);
@@ -92,7 +92,7 @@ export default function AuthPopup({
 
       const data = await apiRequest("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify(payload),
+        data: payload,
       });
 
       setUser({

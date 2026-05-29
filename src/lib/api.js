@@ -1,25 +1,33 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+import { apiClient } from "./axios";
 
 export async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  try {
+    const response = await apiClient({
+      url: path,
+      method: options.method || "GET",
+      params: options.params,
+      data:
+        options.data ?? (options.body ? JSON.parse(options.body) : undefined),
+      headers: options.headers,
+    });
+    return response.data;
+  } catch (error) {
+    let message = "Request failed";
 
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+    if (error.response) {
+      message = error.response.data?.message || "Request failed";
+    } else if (error.code === "ECONNABORTED") {
+      message = "Request timed out. Please try again.";
+    } else if (error.request) {
+      message = "No response from server. Please check your connection.";
+    } else {
+      message = error.message || "Request failed";
+    }
 
-  if (!response.ok) {
-    const error = new Error(data?.message || "Request failed");
-    error.status = response.status;
-    error.data = data;
-    throw error;
+    const normalizedError = new Error(message);
+    normalizedError.status = error.response?.status;
+    normalizedError.data = error.response?.data;
+
+    throw normalizedError;
   }
-
-  return data;
 }

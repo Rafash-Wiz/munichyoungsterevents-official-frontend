@@ -163,7 +163,12 @@ export default function User() {
         setIsLoadingBookings(true);
         setBookingsError("");
 
-        const data = await apiRequest(`/api/bookings/me?page=${page}&size=10`);
+        const data = await apiRequest("/api/bookings/me", {
+          params: {
+            page,
+            size: 10,
+          },
+        });
         setMyBookings(data.content.map(normalizeBooking));
         setMyBookingsTotalPages(data.totalPages || 1);
       } catch (error) {
@@ -203,22 +208,22 @@ export default function User() {
           return;
         }
 
-        const queryParams = new URLSearchParams({
-          page: String(page),
-          size: "10",
-        });
+        const params = {
+          page,
+          size: 10,
+        };
 
         if (eventId) {
-          queryParams.set("eventId", eventId);
+          params.eventId = eventId;
         }
 
         if (status !== "all") {
-          queryParams.set("status", status.toUpperCase());
+          params.status = status.toUpperCase();
         }
 
-        const data = await apiRequest(
-          `/api/bookings?${queryParams.toString()}`,
-        );
+        const data = await apiRequest("/api/bookings", {
+          params,
+        });
         setAdminBookings(data.content.map(normalizeBooking));
         setAdminBookingsTotalPages(data.totalPages || 1);
       } catch (error) {
@@ -247,9 +252,13 @@ export default function User() {
       setIsLoadingSelectedUserBookings(true);
       setSelectedUserBookingsError("");
 
-      const userBookings = await apiRequest(
-        `/api/bookings?userId=${userId}&page=${page}&size=10`,
-      );
+      const userBookings = await apiRequest("/api/bookings", {
+        params: {
+          userId,
+          page,
+          size: 10,
+        },
+      });
       setSelectedUserBookings(userBookings.content.map(normalizeBooking));
       setSelectedUserBookingsTotalPages(userBookings.totalPages || 1);
     } catch (error) {
@@ -340,25 +349,27 @@ export default function User() {
         setIsLoadingAdminUsers(true);
         setAdminUsersError("");
 
-        const queryParams = new URLSearchParams({
+        const params = {
           role: "ATTENDEE",
-          page: String(adminUsersPage),
-          size: "10",
-        });
+          page: adminUsersPage,
+          size: 10,
+        };
 
         if (attendeeIdFilter.trim()) {
-          queryParams.set("id", attendeeIdFilter.trim());
+          params.id = attendeeIdFilter.trim();
         }
 
         if (attendeeFirstNameFilter.trim()) {
-          queryParams.set("firstName", attendeeFirstNameFilter.trim());
+          params.firstName = attendeeFirstNameFilter.trim();
         }
 
         if (attendeeLastNameFilter.trim()) {
-          queryParams.set("lastName", attendeeLastNameFilter.trim());
+          params.lastName = attendeeLastNameFilter.trim();
         }
 
-        const data = await apiRequest(`/api/users?${queryParams.toString()}`);
+        const data = await apiRequest("/api/users", {
+          params,
+        });
         setAdminUsers(data.content);
         setAdminUsersTotalPages(data.totalPages || 1);
       } catch (error) {
@@ -386,9 +397,12 @@ export default function User() {
       setIsLoadingAdminEvents(true);
       setAdminEventsError("");
 
-      const data = await apiRequest(
-        `/api/events?page=${adminEventsPage}&size=10`,
-      );
+      const data = await apiRequest("/api/events", {
+        params: {
+          page: adminEventsPage,
+          size: 10,
+        },
+      });
       setAdminEvents(data.content);
       setAdminEventsTotalPages(data.totalPages || 1);
     } catch (error) {
@@ -408,9 +422,12 @@ export default function User() {
         setIsLoadingAdminEvents(true);
         setAdminEventsError("");
 
-        const data = await apiRequest(
-          `/api/events?page=${adminEventsPage}&size=10`,
-        );
+        const data = await apiRequest("/api/events", {
+          params: {
+            page: adminEventsPage,
+            size: 10,
+          },
+        });
         setAdminEvents(data.content);
         setAdminEventsTotalPages(data.totalPages || 1);
       } catch (error) {

@@ -38,11 +38,21 @@ export default function Home() {
         setIsLoadingEvents(true);
         setEventsError("");
 
-        const firstPage = await apiRequest("/api/events?page=0&size=50");
+        const firstPage = await apiRequest("/api/events", {
+          params: {
+            page: 0,
+            size: 50,
+          },
+        });
         const allEvents = [...firstPage.content];
 
         for (let page = 1; page < (firstPage.totalPages || 1); page += 1) {
-          const nextPage = await apiRequest(`/api/events?page=${page}&size=50`);
+          const nextPage = await apiRequest("/api/events", {
+            params: {
+              page,
+              size: 50,
+            },
+          });
           allEvents.push(...nextPage.content);
         }
 
@@ -144,9 +154,9 @@ export default function Home() {
 
       const createdBooking = await apiRequest("/api/bookings", {
         method: "POST",
-        body: JSON.stringify({
+        data: {
           eventId: selectedBookingEvent.id,
-        }),
+        },
       });
 
       setPendingBooking(createdBooking);
