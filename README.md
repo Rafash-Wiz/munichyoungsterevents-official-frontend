@@ -1,16 +1,113 @@
-# React + Vite
+# Youngster Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend for the Munich Youngster Events platform, centered around event discovery and booking management.
 
-Currently, two official plugins are available:
+This app lets users:
+- browse public events
+- register and log in
+- book and cancel event bookings
+- view attendee dashboard data
+- manage events and bookings from the admin dashboard
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Public event browsing with separate views for open, coming soon, cancelled, and closed event states
+- Authentication flow with register, login, logout, and protected routes
+- Core booking flow with event selection, booking creation, and booking cancellation
+- Attendee dashboard with paginated personal bookings and booking status tracking
+- Admin dashboard for managing events, attendees, and bookings
+- Event lifecycle actions including open, close, and cancel
+- Centralized API layer with Axios and shared request/error handling
+- Shared domain state managed with Redux Toolkit for auth, events, and bookings
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React
+- Vite
+- React Router
+- Redux Toolkit
+- React Redux
+- Axios
+- ESLint
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## State Management
+
+Shared domain state is managed with Redux Toolkit.
+
+Current Redux slices:
+- `auth`
+- `events`
+- `bookings`
+
+Local component state is still used for view-specific UI state such as:
+- popup open/close
+- local filters
+- temporary form input
+- menu visibility
+
+## API Layer
+
+The app uses Axios through a shared client in:
+
+- [src/lib/axios.js](src/lib/axios.js)
+
+Requests are normalized through:
+
+- [src/lib/api.js](src/lib/api.js)
+
+Current API setup includes:
+- shared `baseURL`
+- `withCredentials: true`
+- timeout handling
+- request/response interceptors for development logging
+- normalized error handling
+
+## Scripts
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+Run linting:
+
+```bash
+npm run lint
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+## Environment
+
+The app reads the backend base URL from:
+
+- `VITE_API_BASE_URL`
+
+Example:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+## Project Notes
+
+- Auth is fully Redux-based.
+- Events and bookings have been partially migrated to Redux where shared domain state made sense.
+- UI-only state is intentionally kept local instead of forcing everything into Redux.
