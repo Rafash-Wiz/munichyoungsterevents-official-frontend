@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from "react-router";
-import { useAuth } from "../auth/useAuth";
+import { useSelector } from "react-redux";
 
 export default function ProtectedRoute() {
-  const { user, isAuthLoading } = useAuth();
+  const user = useSelector((state) => state.auth.user);
+  const isAuthLoading = useSelector((state) => state.auth.isAuthLoading);
 
   if (isAuthLoading) {
     return <div>Checking your session...</div>;

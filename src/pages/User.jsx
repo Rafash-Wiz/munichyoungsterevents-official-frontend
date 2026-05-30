@@ -8,9 +8,26 @@ import EventClosePopup from "../components/EventClosePopup.jsx";
 import EventOpenPopup from "../components/EventOpenPopup.jsx";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-
-import { useAuth } from "../auth/useAuth.js";
 import { apiRequest } from "../lib/api";
+
+import { useDispatch, useSelector } from "react-redux";
+import { clearUser } from "../store/authSlice";
+import {
+  setAdminEvents,
+  setAdminEventsError,
+  setAdminEventsLoading,
+  setAdminEventsTotalPages,
+} from "../store/eventsSlice";
+import {
+  clearBookingsError,
+  setAdminBookings,
+  setAdminBookingsError,
+  setAdminBookingsLoading,
+  setAdminBookingsTotalPages,
+  setBookingsError,
+  setBookingsLoading,
+  setMyBookings,
+} from "../store/bookingsSlice";
 
 export default function User() {
   const navigate = useNavigate();
@@ -39,26 +56,18 @@ export default function User() {
   const [openEventError, setOpenEventError] = useState("");
   const [cancelEventError, setCancelEventError] = useState("");
   const [adminBookingsPage, setAdminBookingsPage] = useState(0);
-  const [adminBookingsTotalPages, setAdminBookingsTotalPages] = useState(1);
   const [adminUsersPage, setAdminUsersPage] = useState(0);
   const [adminUsersTotalPages, setAdminUsersTotalPages] = useState(1);
   const [adminEventsPage, setAdminEventsPage] = useState(0);
-  const [adminEventsTotalPages, setAdminEventsTotalPages] = useState(1);
   const [selectedUserBookingsPage, setSelectedUserBookingsPage] = useState(0);
   const [selectedUserBookingsTotalPages, setSelectedUserBookingsTotalPages] =
     useState(1);
   const [myBookingsPage, setMyBookingsPage] = useState(0);
   const [myBookingsTotalPages, setMyBookingsTotalPages] = useState(1);
 
-  const [adminBookings, setAdminBookings] = useState([]);
-  const [isLoadingAdminBookings, setIsLoadingAdminBookings] = useState(false);
-  const [adminBookingsError, setAdminBookingsError] = useState("");
   const [adminUsers, setAdminUsers] = useState([]);
   const [isLoadingAdminUsers, setIsLoadingAdminUsers] = useState(false);
   const [adminUsersError, setAdminUsersError] = useState("");
-  const [adminEvents, setAdminEvents] = useState([]);
-  const [isLoadingAdminEvents, setIsLoadingAdminEvents] = useState(false);
-  const [adminEventsError, setAdminEventsError] = useState("");
   const [selectedUserData, setSelectedUserData] = useState(null);
   const [isLoadingSelectedUser, setIsLoadingSelectedUser] = useState(false);
   const [selectedUserError, setSelectedUserError] = useState("");
@@ -68,12 +77,36 @@ export default function User() {
   const [selectedUserBookingsError, setSelectedUserBookingsError] =
     useState("");
 
-  const [myBookings, setMyBookings] = useState([]);
-  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
-  const [bookingsError, setBookingsError] = useState("");
+  const myBookings = useSelector((state) => state.bookings.myBookings);
+  const isLoadingBookings = useSelector(
+    (state) => state.bookings.isLoadingBookings,
+  );
+  const bookingsError = useSelector((state) => state.bookings.bookingsError);
+  const adminBookings = useSelector((state) => state.bookings.adminBookings);
+  const isLoadingAdminBookings = useSelector(
+    (state) => state.bookings.isLoadingAdminBookings,
+  );
+  const adminBookingsError = useSelector(
+    (state) => state.bookings.adminBookingsError,
+  );
+  const adminBookingsTotalPages = useSelector(
+    (state) => state.bookings.adminBookingsTotalPages,
+  );
+
   const [bookingActionError, setBookingActionError] = useState("");
   const [activeBookingActionId, setActiveBookingActionId] = useState(null);
-  const { user, setUser } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const adminEvents = useSelector((state) => state.events.adminEvents);
+  const isLoadingAdminEvents = useSelector(
+    (state) => state.events.isLoadingAdminEvents,
+  );
+  const adminEventsError = useSelector(
+    (state) => state.events.adminEventsError,
+  );
+  const adminEventsTotalPages = useSelector(
+    (state) => state.events.adminEventsTotalPages,
+  );
   const normalizeBooking = (booking) => {
     const normalizedStatus =
       booking.bookingStatus ?? booking.status ?? "UNKNOWN";
@@ -149,7 +182,7 @@ export default function User() {
     setBookingEventFilter("");
     setAppliedBookingSearchQuery("");
     setAppliedBookingEventFilter("");
-    setAdminBookingsError("");
+    dispatch(setAdminBookingsError(""));
     setAdminBookingsPage(0);
   };
 
@@ -160,8 +193,8 @@ export default function User() {
       }
 
       try {
-        setIsLoadingBookings(true);
-        setBookingsError("");
+        dispatch(setBookingsLoading(true));
+        dispatch(clearBookingsError());
 
         const data = await apiRequest("/api/bookings/me", {
           params: {
@@ -169,15 +202,15 @@ export default function User() {
             size: 10,
           },
         });
-        setMyBookings(data.content.map(normalizeBooking));
+        dispatch(setMyBookings(data.content.map(normalizeBooking)));
         setMyBookingsTotalPages(data.totalPages || 1);
       } catch (error) {
-        setBookingsError(error.message);
+        dispatch(setBookingsError(error.message));
       } finally {
-        setIsLoadingBookings(false);
+        dispatch(setBookingsLoading(false));
       }
     },
-    [currentUser],
+    [currentUser, dispatch],
   );
 
   const refreshMyBookings = async () => {
@@ -198,13 +231,13 @@ export default function User() {
       }
 
       try {
-        setIsLoadingAdminBookings(true);
-        setAdminBookingsError("");
+        dispatch(setAdminBookingsLoading(true));
+        dispatch(setAdminBookingsError(""));
 
         if (bookingId) {
           const booking = await apiRequest(`/api/bookings/${bookingId}`);
-          setAdminBookings([normalizeBooking(booking)]);
-          setAdminBookingsTotalPages(1);
+          dispatch(setAdminBookings([normalizeBooking(booking)]));
+          dispatch(setAdminBookingsTotalPages(1));
           return;
         }
 
@@ -224,19 +257,19 @@ export default function User() {
         const data = await apiRequest("/api/bookings", {
           params,
         });
-        setAdminBookings(data.content.map(normalizeBooking));
-        setAdminBookingsTotalPages(data.totalPages || 1);
+        dispatch(setAdminBookings(data.content.map(normalizeBooking)));
+        dispatch(setAdminBookingsTotalPages(data.totalPages || 1));
       } catch (error) {
         if (bookingId && error.status === 404) {
-          setAdminBookings([]);
-          setAdminBookingsError("No booking found.");
-          setAdminBookingsTotalPages(1);
+          dispatch(setAdminBookings([]));
+          dispatch(setAdminBookingsError("No booking found."));
+          dispatch(setAdminBookingsTotalPages(1));
           return;
         }
 
-        setAdminBookingsError(error.message);
+        dispatch(setAdminBookingsError(error.message));
       } finally {
-        setIsLoadingAdminBookings(false);
+        dispatch(setAdminBookingsLoading(false));
       }
     },
     [
@@ -244,6 +277,7 @@ export default function User() {
       appliedBookingSearchQuery,
       bookingStatusFilter,
       currentUser,
+      dispatch,
     ],
   );
 
@@ -394,8 +428,8 @@ export default function User() {
     }
 
     try {
-      setIsLoadingAdminEvents(true);
-      setAdminEventsError("");
+      dispatch(setAdminEventsLoading(true));
+      dispatch(setAdminEventsError(""));
 
       const data = await apiRequest("/api/events", {
         params: {
@@ -403,12 +437,12 @@ export default function User() {
           size: 10,
         },
       });
-      setAdminEvents(data.content);
-      setAdminEventsTotalPages(data.totalPages || 1);
+      dispatch(setAdminEvents(data.content));
+      dispatch(setAdminEventsTotalPages(data.totalPages || 1));
     } catch (error) {
-      setAdminEventsError(error.message);
+      dispatch(setAdminEventsError(error.message));
     } finally {
-      setIsLoadingAdminEvents(false);
+      dispatch(setAdminEventsLoading(false));
     }
   };
 
@@ -419,8 +453,8 @@ export default function User() {
       }
 
       try {
-        setIsLoadingAdminEvents(true);
-        setAdminEventsError("");
+        dispatch(setAdminEventsLoading(true));
+        dispatch(setAdminEventsError(""));
 
         const data = await apiRequest("/api/events", {
           params: {
@@ -428,17 +462,17 @@ export default function User() {
             size: 10,
           },
         });
-        setAdminEvents(data.content);
-        setAdminEventsTotalPages(data.totalPages || 1);
+        dispatch(setAdminEvents(data.content));
+        dispatch(setAdminEventsTotalPages(data.totalPages || 1));
       } catch (error) {
-        setAdminEventsError(error.message);
+        dispatch(setAdminEventsError(error.message));
       } finally {
-        setIsLoadingAdminEvents(false);
+        dispatch(setAdminEventsLoading(false));
       }
     };
 
     loadAdminEvents();
-  }, [adminEventsPage, currentUser]);
+  }, [adminEventsPage, currentUser, dispatch]);
 
   const handleHeaderAuthClick = async () => {
     if (!user) {
@@ -453,7 +487,7 @@ export default function User() {
     } catch (error) {
       console.error(error);
     } finally {
-      setUser(null);
+      dispatch(clearUser());
       navigate("/");
     }
   };

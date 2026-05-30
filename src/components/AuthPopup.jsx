@@ -3,7 +3,8 @@ import { useNavigate } from "react-router";
 import RegisteredPopUp from "./RegisteredPopUp";
 
 import { apiRequest } from "../lib/api";
-import { useAuth } from "../auth/useAuth";
+import { useDispatch } from "react-redux";
+import { setUser } from "../store/authSlice";
 
 export default function AuthPopup({
   isAuthOpen,
@@ -23,7 +24,7 @@ export default function AuthPopup({
 
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setUser } = useAuth();
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
@@ -95,13 +96,15 @@ export default function AuthPopup({
         data: payload,
       });
 
-      setUser({
-        userId: data.userId,
-        email: data.email,
-        role: data.role,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      });
+      dispatch(
+        setUser({
+          userId: data.userId,
+          email: data.email,
+          role: data.role,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        }),
+      );
 
       setIsAuthOpen(false);
       setAuthMode("login");

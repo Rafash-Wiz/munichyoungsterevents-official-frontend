@@ -6,16 +6,22 @@ import ReadMorePopup from "../components/ReadMorePopup.jsx";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 import PaginationControls from "../components/PaginationControls.jsx";
+import {
+  clearEventsError,
+  setEvents,
+  setEventsError,
+  setEventsLoading,
+} from "../store/eventsSlice";
 
 import { apiRequest } from "../lib/api";
-import { useAuth } from "../auth/useAuth";
+import { useDispatch, useSelector } from "react-redux";
+import { clearUser } from "../store/authSlice";
 import { useNavigate } from "react-router";
 import BookingPopup from "../components/BookingPopup.jsx";
 
 export default function Home() {
   const eventsPageSize = 9;
   const [activeSlide, setActiveSlide] = useState(0);
-  const [eventsList, setEventsList] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
@@ -23,20 +29,22 @@ export default function Home() {
   const [pendingBooking, setPendingBooking] = useState(null);
   const [isBookingLoading, setIsBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState("");
-
-  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
-  const [eventsError, setEventsError] = useState("");
-  const { user, setUser } = useAuth();
+  const user = useSelector((state) => state.auth.user);
   const [eventsView, setEventsView] = useState("OPEN");
   const [eventsPage, setEventsPage] = useState(0);
 
+  const eventsList = useSelector((state) => state.events.eventsList);
+  const isLoadingEvents = useSelector((state) => state.events.isLoadingEvents);
+  const eventsError = useSelector((state) => state.events.eventsError);
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        setIsLoadingEvents(true);
-        setEventsError("");
+        dispatch(setEventsLoading(true));
+        dispatch(clearEventsError());
 
         const firstPage = await apiRequest("/api/events", {
           params: {
@@ -62,16 +70,16 @@ export default function Home() {
           date: event.dateTime,
         }));
 
-        setEventsList(normalizedEvents);
+        dispatch(setEvents(normalizedEvents));
       } catch (error) {
-        setEventsError(error.message);
+        dispatch(setEventsError(error.message));
       } finally {
-        setIsLoadingEvents(false);
+        dispatch(setEventsLoading(false));
       }
     };
 
     loadEvents();
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -99,7 +107,7 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     } finally {
-      setUser(null);
+      dispatch(clearUser());
     }
   };
 

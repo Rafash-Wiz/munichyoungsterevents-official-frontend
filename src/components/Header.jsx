@@ -3,10 +3,13 @@ import { Link } from "react-router";
 import logo from "../images/logo.png";
 import login from "../images/login.png";
 
-import { useAuth } from "../auth/useAuth";
+import { useSelector } from "react-redux";
 
 export default function Header({ onAuthClick, onProfileClick }) {
-  const { user, isAuthLoading } = useAuth();
+
+  const user = useSelector((state) => state.auth.user);
+  const isAuthLoading = useSelector((state) => state.auth.isAuthLoading);
+  
   return (
     <header className="header">
       <div className="header-content">
